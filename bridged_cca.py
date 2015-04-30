@@ -85,11 +85,13 @@ class BridgedCCA(GCCA):
         # calc GEV
         self.logger.info("solving")
         eigvals, eigvecs = self.solve_eigprob(left, right)
+        h_list = [eigvecs[start:end] for start, end in zip(d_list[0:-1], d_list[1:])]
+        h_list_norm = [ self.eigvec_normalization(h, cov_mat[i][i]) for i, h in enumerate(h_list)]
 
         # substitute local variables for member variables
         self.data_num = data_num
         self.cov_mat = cov_mat
-        self.h_list = [eigvecs[start:end] for start, end in zip(d_list[0:-1], d_list[1:])]
+        self.h_list = h_list_norm
         self.eigvals = eigvals
 
 
@@ -99,21 +101,21 @@ if __name__=="__main__":
     # set log level
     logging.root.setLevel(level=logging.INFO)
 
-    # digit = load_digits()
-    # a = digit.data[:100, 0::3]
-    # b = digit.data[:100, 1::3]
-    # c = digit.data[:100, 2::3]
+    digit = load_digits()
+    a = digit.data[:100, 0::3]
+    b = digit.data[:100, 1::3]
+    c = digit.data[:100, 2::3]
     # print a.shape, b.shape, c.shape
     # print a
 
     # create data in advance
-    a = np.random.rand(100, 50)
-    b = np.random.rand(100, 60)
-    c = np.random.rand(100, 70)
+    # a = np.random.rand(100, 50)
+    # b = np.random.rand(100, 60)
+    # c = np.random.rand(100, 70)
 
 
     # create instance of BridgedCCA
-    bcca = BridgedCCA()
+    bcca = BridgedCCA(reg_param=0.0001)
     # calculate BridgedCCA
     bcca.fit(a[:50], b[:50], b[50:], c[50:])
     # transform

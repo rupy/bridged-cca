@@ -35,6 +35,15 @@ class GCCA:
         # result of transformation
         self.z_list = []
 
+    def eigvec_normalization(self, eig_vecs, x_var):
+        self.logger.info("normalization")
+        z_var = np.dot(eig_vecs.T, np.dot(x_var, eig_vecs))
+        invvar = np.diag(np.reciprocal(np.sqrt(np.diag(z_var))))
+        eig_vecs = np.dot(eig_vecs, invvar)
+        print np.dot(eig_vecs.T, np.dot(x_var, eig_vecs)).round().astype(int)
+        return eig_vecs
+
+
     def solve_eigprob(self, left, right):
 
         self.logger.info("calculating eigen dimension")
@@ -47,12 +56,6 @@ class GCCA:
         sort_indices = np.argsort(eig_vals)[::-1]
         eig_vals = eig_vals[sort_indices][:eig_dim].real
         eig_vecs = eig_vecs[:,sort_indices][:,:eig_dim].real
-
-        # normalization
-        self.logger.info("normalization")
-        var = np.dot(eig_vecs.T, np.dot(right, eig_vecs))
-        invvar = np.diag(np.reciprocal(np.sqrt(np.diag(var))))
-        eig_vecs = np.dot(eig_vecs, invvar)
 
         return eig_vals, eig_vecs
 
@@ -118,10 +121,13 @@ class GCCA:
         self.logger.info("solving")
         eigvals, eigvecs = self.solve_eigprob(left, right)
 
+        h_list = [eigvecs[start:end] for start, end in zip(d_list[0:-1], d_list[1:])]
+        h_list_norm = [self.eigvec_normalization(h, cov_mat[i][i]) for i, h in enumerate(h_list)]
+
         # substitute local variables for member variables
         self.data_num = data_num
         self.cov_mat = cov_mat
-        self.h_list = [eigvecs[start:end] for start, end in zip(d_list[0:-1], d_list[1:])]
+        self.h_list = h_list_norm
         self.eigvals = eigvals
 
     def transform(self, *x_list):
@@ -241,21 +247,30 @@ if __name__=="__main__":
     logging.root.setLevel(level=logging.INFO)
 
     # create data in advance
-    # digit = load_digits()
-    # a = digit.data[:100, 0::2]
-    # b = digit.data[:100, 1::2]
-    # c = digit.data[:100, 2::3]
+    digit = load_digits()
+    a = digit.data[:100, 0::2]
+    b = digit.data[:100, 1::2]
 
-    a = np.random.rand(50, 50)
-    b = np.random.rand(50, 60)
-    c = np.random.rand(50, 70)
+    # a = np.random.rand(50, 50)
+    # b = np.random.rand(50, 60)
+    # c = np.random.rand(50, 70)
+    # d = np.random.rand(50, 80)
+    # e = np.random.rand(50, 90)
+    # f = np.random.rand(50, 100)
+    # g = np.random.rand(50, 110)
+    # h = np.random.rand(50, 120)
+    # i = np.random.rand(50, 130)
+    # j = np.random.rand(50, 140)
+    # k = np.random.rand(50, 150)
 
     # create instance of GCCA
-    gcca = GCCA(reg_param=0.001)
+    gcca = GCCA(reg_param=0.0001)
     # calculate GCCA
     gcca.fit(a, b)
+    # gcca.fit(a, b, c, d, e, f, g, h, i,  j, k)
     # transform
     gcca.transform(a, b)
+    # gcca.transform(a, b, c, d, e, f, g, h, i,  j, k)
     # save
     gcca.save_params("save/gcca.h5")
     # load

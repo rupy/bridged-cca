@@ -52,13 +52,16 @@ class CCA(GCCA):
         left_1 = np.dot(c_01, np.linalg.solve(c_11,c_01.T))
         right_1 = c_00
         eigvals_1, eigvecs_1 = self.solve_eigprob(left_1, right_1)
+        eigvecs_1_norm = self.eigvec_normalization(eigvecs_1, right_1)
         # 2
-        eigvecs_2 = 1 / eigvals_1 * np.dot(np.linalg.solve(c_11, c_01.T), eigvecs_1)
+        right_2 = c_11
+        eigvecs_2 = 1 / eigvals_1 * np.dot(np.linalg.solve(c_11, c_01.T), eigvecs_1_norm)
+        eigvecs_2_norm = self.eigvec_normalization(eigvecs_2, right_2)
 
         # substitute local variables for member variables
         self.data_num = data_num
         self.cov_mat = cov_mat
-        self.h_list = [eigvecs_1, eigvecs_2]
+        self.h_list = [eigvecs_1_norm, eigvecs_2_norm]
         self.eigvals = eigvals_1
 
     def ptransform(self, x0, x1, beta=0.5):
@@ -134,15 +137,15 @@ if __name__=="__main__":
     logging.root.setLevel(level=logging.INFO)
 
     # create data in advance
-    # digit = load_digits()
-    # a = digit.data[:50, 0::1]
-    # b = digit.data[:50, 1::2]
+    digit = load_digits()
+    a = digit.data[:100, 0::2]
+    b = digit.data[:100, 1::2]
 
-    a = np.random.rand(50, 50)
-    b = np.random.rand(50, 60)
+    # a = np.random.rand(50, 50)
+    # b = np.random.rand(50, 60)
 
     # create instance of CCA
-    cca = CCA()
+    cca = CCA(reg_param=0.0001)
     # calculate CCA
     cca.fit(a, b)
     # transform
